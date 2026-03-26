@@ -258,7 +258,7 @@ def validate_policy_numbers(data) -> list[str]:
     # YOUR CODE ENDS HERE
     # ==============================
 
-
+# Linnet Function 4
 # EXTRA CREDIT
 def google_scholar_searcher(query):
     """
@@ -273,6 +273,21 @@ def google_scholar_searcher(query):
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
+    url = f"https://scholar.google.com/scholar?q={requests.utils.quote(query)}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    titles = []
+    for item in soup.find_all('h3', class_='gs_rt'):
+        title_text = item.text
+        title_text = re.sub(r'^\[.*?\]\s*', '', title_text)
+        titles.append(title_text)
+        
+    return titles
     pass
     # ==============================
     # YOUR CODE ENDS HERE
