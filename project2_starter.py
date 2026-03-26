@@ -304,7 +304,9 @@ class TestCases(unittest.TestCase):
 
     def test_load_listing_results(self):
         # TODO: Check that the number of listings extracted is 18.
+        self.assertEqual(len(self.listings), 18)
         # TODO: Check that the FIRST (title, id) tuple is  ("Loft in Mission District", "1944564").
+        self.assertEqual(self.listings[0], ("Loft in Mission District", "1944564"))
         pass
 
     def test_get_listing_details(self):
