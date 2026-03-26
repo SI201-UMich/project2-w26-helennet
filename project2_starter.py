@@ -191,7 +191,7 @@ def create_listing_database(html_path) -> list[tuple]:
     # YOUR CODE ENDS HERE
     # ==============================
 
-
+# Helen Funtion 1
 def output_csv(data, filename) -> None:
     """
     Write data to a CSV file with the provided filename.
@@ -214,7 +214,7 @@ def output_csv(data, filename) -> None:
     # YOUR CODE ENDS HERE
     # ==============================
 
-
+# Helen Function 2
 def avg_location_rating_by_room_type(data) -> dict:
     """
     Calculate the average location_rating for each room_type.
@@ -237,7 +237,7 @@ def avg_location_rating_by_room_type(data) -> dict:
     # YOUR CODE ENDS HERE
     # ==============================
 
-
+# Helen Function 3
 def validate_policy_numbers(data) -> list[str]:
     """
     Validate policy_number format for each listing in data.
@@ -341,6 +341,7 @@ class TestCases(unittest.TestCase):
         )
         pass
 
+# Helen Test Function 1
     def test_output_csv(self):
         out_path = os.path.join(self.base_dir, "test.csv")
 
@@ -349,12 +350,13 @@ class TestCases(unittest.TestCase):
         # TODO: Check that the first data row matches ["Guesthouse in San Francisco", "49591060", "STR-0000253", "Superhost", "Ingrid", "Entire Room", "5.0"].
 
         os.remove(out_path)
-
+# Helen Test Function 2
     def test_avg_location_rating_by_room_type(self):
         # TODO: Call avg_location_rating_by_room_type() and save the output.
         # TODO: Check that the average for "Private Room" is 4.9.
         pass
 
+# Helen Test Function
     def test_validate_policy_numbers(self):
         # TODO: Call validate_policy_numbers() on detailed_data and save the result into a variable invalid_listings.
         # TODO: Check that the list contains exactly "16204265" for this dataset.
