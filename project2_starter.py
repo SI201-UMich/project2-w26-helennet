@@ -151,7 +151,7 @@ def get_listing_details(listing_id) -> dict:
     # YOUR CODE ENDS HERE
     # ==============================
 
-
+# Linnet Function 3
 def create_listing_database(html_path) -> list[tuple]:
     """
     Use prior functions to gather all necessary information and create a database of listings.
@@ -167,6 +167,25 @@ def create_listing_database(html_path) -> list[tuple]:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
+    database = []
+    listings = load_listing_results(html_path)
+    
+    for title, listing_id in listings:
+        details_dict = get_listing_details(listing_id)
+        info = details_dict.get(listing_id, {})
+        
+        listing_tuple = (
+            title,
+            listing_id,
+            info.get("policy_number", "Exempt"),
+            info.get("host_type", "regular"),
+            info.get("host_name", "Unknown"),
+            info.get("room_type", "Entire Room"),
+            info.get("location_rating", 0.0)
+        )
+        database.append(listing_tuple)
+        
+    return database
     pass
     # ==============================
     # YOUR CODE ENDS HERE
