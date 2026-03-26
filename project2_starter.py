@@ -1,10 +1,10 @@
 # SI 201 HW4 (Library Checkout System)
-# Your name:
-# Your student id:
-# Your email:
-# Who or what you worked with on this homework (including generative AI like ChatGPT):
+# Your name: Xinyi Peng & Shiyu Xiong
+# Your student id: xinyip & 
+# Your email: xinyip@umich.edu &
+# Who or what you worked with on this homework (including generative AI like ChatGPT): Xinyi Peng & Shiyu Xiong
 # If you worked with generative AI also add a statement for how you used it.
-# e.g.:
+# e.g.: We use GenAI to help us check our codes.
 # Asked ChatGPT for hints on debugging and for suggestions on overall code structure
 #
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
