@@ -27,7 +27,6 @@ If you are getting "encoding errors" while trying to open, read, or write from a
 """
 
 # Linnet Function 1
-
 def load_listing_results(html_path) -> list[tuple]:
     """
     Load file data from html_path and parse through it to find listing titles and listing ids.
@@ -68,7 +67,7 @@ def load_listing_results(html_path) -> list[tuple]:
     # YOUR CODE ENDS HERE
     # ==============================
 
-
+# Linnet Function 2
 def get_listing_details(listing_id) -> dict:
     """
     Parse through listing_<id>.html to extract listing details.
@@ -92,6 +91,61 @@ def get_listing_details(listing_id) -> dict:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
+    filepath = os.path.join("html_files", f"{listing_id}.html")
+    
+    details = {
+        "policy_number": "Exempt", 
+        "host_type": "regular",
+        "host_name": "",
+        "room_type": "Entire Room",
+        "location_rating": 0.0
+    }
+    
+    try:
+        with open(filepath, "r", encoding="utf-8-sig") as f:
+            soup = BeautifulSoup(f, 'html.parser')
+            
+            # Policy Number
+            policy_text = soup.find(text=re.compile(r'license|policy|registration', re.I))
+            if policy_text:
+                if "pending" in policy_text.lower():
+                    details["policy_number"] = "Pending"
+                elif "exempt" in policy_text.lower():
+                    details["policy_number"] = "Exempt"
+                else:
+                    details["policy_number"] = policy_text.strip()
+
+            # Host Name
+            host_header = soup.find('h2', text=re.compile(r'Hosted by', re.I))
+            if host_header:
+                host_string = host_header.text.strip()
+                details["host_name"] = host_string.replace("Hosted by ", "").strip()
+                
+            # Host Type
+            if soup.find(text=re.compile(r'Superhost', re.I)):
+                details["host_type"] = "Superhost"
+
+            subtitle_element = soup.find('h2', class_='PLACEHOLDER_CLASS_FOR_SUBTITLE')
+            if subtitle_element:
+                subtitle = subtitle_element.text.strip().lower()
+                if "private" in subtitle:
+                    details["room_type"] = "Private Room"
+                elif "shared" in subtitle:
+                    details["room_type"] = "Shared Room"
+                else:
+                    details["room_type"] = "Entire Room"
+
+            rating_element = soup.find('span', class_='PLACEHOLDER_CLASS_FOR_LOCATION_RATING')
+            if rating_element:
+                try:
+                    details["location_rating"] = float(re.search(r'\d+\.\d+', rating_element.text).group())
+                except (ValueError, AttributeError):
+                    details["location_rating"] = 0.0
+
+    except FileNotFoundError:
+        pass
+        
+    return {listing_id: details}
     pass
     # ==============================
     # YOUR CODE ENDS HERE
