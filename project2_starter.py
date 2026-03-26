@@ -26,6 +26,7 @@ If you are getting "encoding errors" while trying to open, read, or write from a
     encoding="utf-8-sig"
 """
 
+# Linnet Function 1
 
 def load_listing_results(html_path) -> list[tuple]:
     """
@@ -41,6 +42,27 @@ def load_listing_results(html_path) -> list[tuple]:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
+    results = []
+    with open(html_path, "r", encoding="utf-8-sig") as f:
+        soup = BeautifulSoup(f, 'html.parser')
+ 
+    listings = soup.find_all('div', class_='PLACEHOLDER_CLASS_FOR_LISTING_CARD')
+    
+    for listing in listings:
+        title_element = listing.find('div', class_='PLACEHOLDER_CLASS_FOR_TITLE') 
+        title = title_element.text.strip() if title_element else "Unknown Title"
+        
+        link_element = listing.find('a', href=True)
+        listing_id = ""
+        if link_element:
+            match = re.search(r'/rooms/(\d+)', link_element['href'])
+            if match:
+                listing_id = match.group(1)
+                
+        if title and listing_id:
+            results.append((title, listing_id))
+            
+    return results
     pass
     # ==============================
     # YOUR CODE ENDS HERE
