@@ -90,7 +90,10 @@ def get_listing_details(listing_id) -> dict:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
-    filepath = os.path.join("html_files", f"{listing_id}.html")
+    import os
+    import re
+    from bs4 import BeautifulSoup
+
     details = {
         "policy_number": "Exempt", 
         "host_type": "regular",
@@ -98,51 +101,48 @@ def get_listing_details(listing_id) -> dict:
         "room_type": "Entire Room",
         "location_rating": 0.0
     }
+
+    clean_id = str(listing_id).strip()
+    filepath = os.path.join("html_files", f"listing_{clean_id}.html")
     
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            soup = BeautifulSoup(f, 'html.parser')
-            
-            # 1. Policy Number (核心修复：必须先找 STR，找不到才允许算作 Pending/Exempt)
-            full_text = soup.get_text(separator=" ", strip=True)
-            str_match = re.search(r'(STR-\d+)', full_text, re.IGNORECASE)
-            
-            if str_match:
-                details["policy_number"] = str_match.group(1).upper()
-            elif re.search(r'\bpending\b', full_text, re.IGNORECASE):
-                details["policy_number"] = "Pending"
-            elif re.search(r'\bexempt\b', full_text, re.IGNORECASE):
-                details["policy_number"] = "Exempt"
-
-            # 2. Host Name & Room Type (作业经典 tag)
-            h2_tag = soup.find('h2', class_='_14i3z6h')
-            if h2_tag:
-                h2_text = h2_tag.get_text(strip=True)
-                # 提取房东名字
-                if 'hosted by' in h2_text.lower():
-                    details["host_name"] = h2_text.split('hosted by')[-1].strip()
-                # 提取房间类型
-                if 'private' in h2_text.lower():
-                    details["room_type"] = "Private Room"
-                elif 'shared' in h2_text.lower():
-                    details["room_type"] = "Shared Room"
-                else:
-                    details["room_type"] = "Entire Room"
-
-            # 3. Host Type (全文只要出现 Superhost 就行)
-            if soup.find(string=re.compile(r'Superhost', re.IGNORECASE)):
-                details["host_type"] = "Superhost"
-
-            # 4. Location Rating (作业经典 class)
-            rating_span = soup.find('span', class_='_17p6nbba')
-            if rating_span:
-                match = re.search(r'(\d+\.\d+)', rating_span.get_text(strip=True))
-                if match:
-                    details["location_rating"] = float(match.group(1))
-
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+            html = f.read()
     except FileNotFoundError:
-        pass
-        
+        return {listing_id: details}
+
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    full_text = soup.get_text(separator=" ", strip=True).replace("\xa0", " ")
+
+    str_match = re.search(r'(STR\s*-\s*\d+)', full_text, re.IGNORECASE)
+    if str_match:
+        details["policy_number"] = str_match.group(1).replace(" ", "").upper()
+    elif "pending" in full_text.lower():
+        details["policy_number"] = "Pending"
+
+    if "superhost" in full_text.lower():
+        details["host_type"] = "Superhost"
+
+    for h in soup.find_all(['h1', 'h2', 'h3']):
+        h_text = h.get_text(strip=True).replace("\xa0", " ")
+        if "hosted by" in h_text.lower():
+            if "private" in h_text.lower():
+                details["room_type"] = "Private Room"
+            elif "shared" in h_text.lower():
+                details["room_type"] = "Shared Room"
+            else:
+                details["room_type"] = "Entire Room"
+            
+            name_match = re.search(r'hosted by\s+([A-Za-z]+)', h_text, re.IGNORECASE)
+            if name_match:
+                details["host_name"] = name_match.group(1).strip()
+            break 
+
+    loc_match = re.search(r'Location[^\d]{0,30}?([0-5]\.\d+)', full_text, re.IGNORECASE)
+    if loc_match:
+        details["location_rating"] = float(loc_match.group(1))
+
     return {listing_id: details}
     # ==============================
     # YOUR CODE ENDS HERE
