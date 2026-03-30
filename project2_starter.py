@@ -4,8 +4,9 @@
 # Your email: xinyip@umich.edu &
 # Who or what you worked with on this homework (including generative AI like ChatGPT): Xinyi Peng & Shiyu Xiong
 # If you worked with generative AI also add a statement for how you used it.
-# e.g.: We use GenAI to help us check our codes.
+# e.g.: 
 # Asked ChatGPT for hints on debugging and for suggestions on overall code structure
+# We use GenAI to help debugging our original codes, as well as using it for help when we don't know how to write a certain function.
 #
 # Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
 #
@@ -95,16 +96,14 @@ def get_listing_details(listing_id) -> dict:
     from bs4 import BeautifulSoup
 
     details = {
-        "policy_number": "Exempt", 
+        "policy_number": "",  
         "host_type": "regular",
         "host_name": "",
         "room_type": "Entire Room",
         "location_rating": 0.0
     }
 
-    clean_id = str(listing_id).strip()
-    filepath = os.path.join("html_files", f"listing_{clean_id}.html")
-    
+    filepath = os.path.join("html_files", f"listing_{listing_id}.html")
     try:
         with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
             html = f.read()
@@ -112,41 +111,52 @@ def get_listing_details(listing_id) -> dict:
         return {listing_id: details}
 
     soup = BeautifulSoup(html, 'html.parser')
-    
     full_text = soup.get_text(separator=" ", strip=True).replace("\xa0", " ")
 
-    str_match = re.search(r'(STR\s*-\s*\d+)', full_text, re.IGNORECASE)
-    if str_match:
-        details["policy_number"] = str_match.group(1).replace(" ", "").upper()
-    elif "pending" in full_text.lower():
-        details["policy_number"] = "Pending"
+    policy_match = re.search(r"(?:Policy|License|Registration)\s*number\s*[:\-]?\s*([A-Za-z0-9\-]+)", full_text, re.IGNORECASE)
+    
+    if policy_match:
+        extracted = policy_match.group(1)
+        if "pending" in extracted.lower():
+            details["policy_number"] = "Pending"
+        elif "exempt" in extracted.lower() or "not needed" in extracted.lower():
+            details["policy_number"] = "Exempt"
+        else:
+            details["policy_number"] = extracted.upper() 
+    else:
+        if "pending" in full_text.lower():
+            details["policy_number"] = "Pending"
+        elif "exempt" in full_text.lower() or "not needed" in full_text.lower():
+            details["policy_number"] = "Exempt"
+        else:
+            details["policy_number"] = "INVALID"
 
     if "superhost" in full_text.lower():
         details["host_type"] = "Superhost"
 
-    for h in soup.find_all(['h1', 'h2', 'h3']):
-        h_text = h.get_text(strip=True).replace("\xa0", " ")
+    host_text = ""
+    for h in soup.find_all(['h1','h2','h3']):
+        h_text = h.get_text(strip=True).replace("\xa0"," ")
         if "hosted by" in h_text.lower():
-            if "private" in h_text.lower():
-                details["room_type"] = "Private Room"
-            elif "shared" in h_text.lower():
-                details["room_type"] = "Shared Room"
-            else:
-                details["room_type"] = "Entire Room"
-            
-            name_match = re.search(r'hosted by\s+([A-Za-z]+)', h_text, re.IGNORECASE)
-            if name_match:
-                details["host_name"] = name_match.group(1).strip()
-            break 
+            host_text = h_text
+            break
+    if host_text:
+        if "private" in host_text.lower():
+            details["room_type"] = "Private Room"
+        elif "shared" in host_text.lower():
+            details["room_type"] = "Shared Room"
+        else:
+            details["room_type"] = "Entire Room"
+
+        name_match = re.search(r'hosted by\s+([A-Za-z]+)', host_text, re.IGNORECASE)
+        if name_match:
+            details["host_name"] = name_match.group(1).strip()
 
     loc_match = re.search(r'Location[^\d]{0,30}?([0-5]\.\d+)', full_text, re.IGNORECASE)
     if loc_match:
         details["location_rating"] = float(loc_match.group(1))
 
     return {listing_id: details}
-    # ==============================
-    # YOUR CODE ENDS HERE
-    # ==============================
 
 # Linnet Function 3
 def create_listing_database(html_path) -> list[tuple]:
@@ -289,19 +299,20 @@ def validate_policy_numbers(data) -> list[str]:
     # ==============================
     # YOUR CODE STARTS HERE
     # ==============================
+    import re
+
     invalid_ids = []
+
+    valid_pattern = r"STR-000\d{4}|20\d{2}-00\d{4}STR"
 
     for row in data:
         listing_id = row[1]
-        policy_number = row[2].strip()
+        policy_number = row[2]
 
-        if policy_number in ["Pending", "Exempt"]:
+        if policy_number == "Pending" or policy_number == "Exempt":
             continue
 
-        valid_format_1 = re.fullmatch(r"20\d{2}-00\d{4}STR", policy_number)
-        valid_format_2 = re.fullmatch(r"STR-000\d{4}", policy_number)
-
-        if not (valid_format_1 or valid_format_2):
+        if policy_number == "INVALID" or not re.fullmatch(valid_pattern, policy_number):
             invalid_ids.append(listing_id)
 
     return invalid_ids
